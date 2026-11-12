@@ -9,7 +9,7 @@ El proyecto es un Maven multimódulo (Java 21, Maven Wrapper) con un único mód
 
 Lanza `ReglaInfringidaException` con mensajes en español. No es thread-safe, y el diseño del motor ya delegaba en el servidor la tarea de serializar el acceso. La motivación y el alcance están en proposal.md, y el comportamiento exigido, en las specs `salas`, `partida-en-linea` y `cliente-web`.
 
-El hosting objetivo es el plan gratuito de Render: un único contenedor que puede dormirse y reiniciarse, sin disco persistente y con una sola instancia.
+El hosting es Railway: un único contenedor construido desde el `Dockerfile` del repo, que puede reiniciarse en cada despliegue, sin disco persistente y con una sola réplica. (La exploración partió del plan gratuito de Render; se cambió a Railway al desplegar, y el diseño no depende del host.)
 
 ## Goals / Non-Goals
 
@@ -90,25 +90,27 @@ Archivos en `servidor/src/main/resources/static/`:
 
 El mapa es un SVG generado desde JS: cada isla tiene una coordenada fija y simétrica guardada en el cliente, y las rutas y distancias llegan en el mensaje `mapa`. Cada flota en tránsito se dibuja sobre su ruta en la posición proporcional a su avance, que se calcula a partir de las rondas restantes y de la distancia.
 
-La URL del WebSocket se deriva de `location`: `wss` si la página va por `https` y `ws` si no. Así funciona igual en local y en Render.
+La URL del WebSocket se deriva de `location`: `wss` si la página va por `https` y `ws` si no. Así funciona igual en local y en producción.
 - *Alternativa:* React con Vite. Descartada porque exige Node y un paso de build en Docker y en local, a cambio de poco con 4 pantallas.
 
-### D8. Despliegue en Render
+### D8. Despliegue en Railway
 - **`Dockerfile` multi-stage.**
   - Etapa de build: `eclipse-temurin:21-jdk` ejecuta `./mvnw -pl servidor -am package -DskipTests`. Los tests ya los pasa el desarrollador antes del push.
   - Etapa final: `eclipse-temurin:21-jre` con el jar ejecutable de Spring Boot.
-- **Puerto.** `server.port=${PORT:8080}`, porque Render inyecta `PORT`.
-- **`render.yaml`.** Define un servicio `web` con `runtime: docker`, `plan: free`, `autoDeploy: true` desde `main` y `healthCheckPath: /`.
-- **Arranque.** Como el servicio se duerme, el arranque debe ser rápido: nada de inicializaciones costosas al arrancar.
+- **Puerto.** `server.port=${PORT:8080}`, porque Railway inyecta `PORT`.
+- **Cabeceras del proxy.** `server.forward-headers-strategy=framework`. El servidor queda detrás del proxy HTTPS del host y recibe las peticiones por `http` en un puerto interno. Sin las cabeceras `X-Forwarded-*`, la comprobación de mismo origen del handshake rechaza con 403 el `Origin: https://<dominio público>` del navegador. Lo cubre `OrigenTrasProxyIT`.
+- **Sin configuración propia del host.** Railway detecta el `Dockerfile` de la raíz al conectar el repo, y despliega en cada push a `main`. El dominio público se genera desde el panel.
+- **Arranque.** Debe ser rápido, porque cada despliegue reinicia el servicio: nada de inicializaciones costosas al arrancar.
+- *Alternativa:* Render (plan gratuito, con `render.yaml`). Fue la opción inicial, y se descartó al desplegar en favor de Railway. El `Dockerfile` es el mismo, así que volver a Render, Koyeb o Cloud Run solo cambiaría la configuración del host.
 - *Alternativa:* cliente en GitHub Pages y servidor aparte. Descartada en exploración porque exige CORS, orígenes WebSocket y dos despliegues.
 
 ## Risks / Trade-offs
 
-- [El plan gratuito de Render cambia o desaparece] → Comprobar sus condiciones al implementar el despliegue. El `Dockerfile` es estándar y funciona igual en Koyeb o Google Cloud Run (con un máximo de 1 instancia); solo cambiaría `render.yaml`.
-- [Arranque en frío de alrededor de un minuto tras un rato sin uso] → El cliente muestra "el servidor está despertando" (spec `cliente-web`). Para una demo, basta abrir la URL un poco antes.
+- [Las condiciones del plan de Railway cambian] → El `Dockerfile` es estándar y funciona igual en otros hosts de contenedores (Render, Koyeb, Cloud Run con un máximo de 1 instancia).
+- [Arranque lento o servicio dormido, si el host lo duerme por inactividad] → El cliente muestra "el servidor está despertando" (spec `cliente-web`) cuando la conexión tarda. Como el cliente lo sirve el mismo servidor, en un arranque en frío el navegador espera primero a que cargue la página.
 - [Eliminaciones accidentales por una caída breve de red o por pasar el móvil a segundo plano] → Aceptado por decisión de producto. Los intervalos de ping son configurables, y un periodo de gracia queda para un cambio futuro.
 - [Las partidas en memoria se pierden en un redeploy o reinicio] → Aceptado. Conviene no desplegar mientras alguien juega.
-- [El proxy de Render cierra WebSockets inactivos] → El ping cada 25 s mantiene viva la conexión.
+- [El proxy del host cierra WebSockets inactivos] → El ping cada 25 s mantiene viva la conexión.
 - [Un cliente malicioso podría mandar mensajes arbitrarios] → El servidor valida todo (apodos, anfitrión, estado de la sala, órdenes vía motor) y nunca confía en el cliente. Se limita el tamaño de los mensajes entrantes. No hay más defensas, como rate limiting, porque es una demo.
 - [Que el JSON del protocolo se acople al modelo interno del motor] → Los DTO de `dto` se mapean explícitamente desde el modelo del motor, así que cambiar uno no rompe el otro sin que falle un test.
 
@@ -116,6 +118,6 @@ La URL del WebSocket se deriva de `location`: `wss` si la página va por `https`
 
 Es un módulo nuevo, así que no hay nada que migrar.
 1. Desarrollar y probar en local con `./mvnw -pl servidor -am package -DskipTests && java -jar servidor/target/archipielago-servidor.jar` y abrir `http://localhost:8080` en dos navegadores.
-2. Hacer push a `main` con `Dockerfile` y `render.yaml`.
-3. En Render, crear el servicio desde "New > Blueprint" eligiendo el repo. Los siguientes pushes despliegan solos.
-4. Rollback: "Rollback" en el panel de Render al deploy anterior, o revertir el commit.
+2. Hacer push a `main` con el `Dockerfile`.
+3. En Railway, crear el proyecto desde "Deploy from GitHub repo" y generar el dominio público. Los siguientes pushes despliegan solos.
+4. Rollback: volver a desplegar un deploy anterior desde el panel de Railway, o revertir el commit.

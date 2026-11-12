@@ -1,5 +1,5 @@
 # Imagen del servidor de Archipiélago: compila con Maven Wrapper y ejecuta el jar de Spring Boot.
-# Render (u otro host de contenedores) inyecta el puerto en la variable PORT.
+# El host de contenedores (Railway en la versión pública) inyecta el puerto en la variable PORT.
 
 # ---- build ----
 FROM eclipse-temurin:21-jdk AS build
@@ -22,5 +22,5 @@ COPY --from=build /fuente/servidor/target/archipielago-servidor.jar archipielago
 USER archipielago
 ENV PORT=8080
 EXPOSE 8080
-# Ajustes para instancias pequeñas (p. ej. 512 MB del plan gratuito de Render): poca memoria y arranque rápido.
+# Ajustes para instancias pequeñas (p. ej. 512 MB): poca memoria y arranque rápido.
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+UseSerialGC", "-XX:TieredStopAtLevel=1", "-jar", "archipielago.jar"]

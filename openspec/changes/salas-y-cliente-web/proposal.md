@@ -23,7 +23,7 @@ El motor de reglas ya está terminado y probado, pero solo se puede usar desde t
   - pantallas de inicio, sala de espera, partida y fin;
   - mapa de 13 islas con flotas en tránsito;
   - formulario de órdenes, reloj e informe de ronda.
-- Despliegue en Render (plan gratuito) como un único servicio Docker que sirve el cliente y el WebSocket desde el mismo origen, con despliegue automático en cada push a `main`.
+- Despliegue en Railway como un único servicio Docker que sirve el cliente y el WebSocket desde el mismo origen, con despliegue automático en cada push a `main`.
 
 Fuera de alcance:
 - Reconexión o periodo de gracia por desconexión.
@@ -47,8 +47,8 @@ Fuera de alcance:
 
 - **Código nuevo:** módulo Maven `servidor` (Spring Boot con WebSocket), que depende de `motor`. El cliente vive en los recursos estáticos del servidor, sin build de Node.
 - **Motor:** sin cambios en su API ni en sus reglas. El servidor serializa el acceso a cada `Partida`, porque no es thread-safe.
-- **Despliegue:** se añaden un `Dockerfile` y un `render.yaml` (blueprint de Render). Hay que conectar el repo de GitHub a una cuenta gratuita de Render.
-- **Limitaciones aceptadas del plan gratuito:**
-  - El servicio se duerme tras un rato sin uso y la primera visita tarda en despertarlo.
-  - Las partidas en curso se pierden si el servicio se reinicia.
+- **Despliegue:** se añade un `Dockerfile`. Railway lo detecta al conectar el repo de GitHub, así que no hace falta ningún archivo de configuración propio del host.
+- **Limitaciones aceptadas:**
+  - Las partidas en curso se pierden si el servicio se reinicia o se vuelve a desplegar.
+  - El servicio funciona con una sola réplica.
 - **README:** instrucciones para ejecutar el servidor en local y para desplegarlo.

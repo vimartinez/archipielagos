@@ -2,7 +2,7 @@
 
 Juego web de estrategia multijugador por turnos simultáneos. Proyecto demo de Spec-Driven Development con Claude Code y OpenSpec.
 
-**Jugar:** _(URL pública de Render: pendiente del primer despliegue)_
+**Jugar:** <https://archipielagos-production.up.railway.app/>
 
 ## Módulos
 
@@ -61,18 +61,21 @@ docker build -t archipielago .
 docker run --rm -p 8080:8080 archipielago
 ```
 
-## Desplegar en Render (plan gratuito)
+## Despliegue en Railway
 
-El repositorio incluye un `Dockerfile` y un `render.yaml` (blueprint), así que no hay nada que rellenar a mano:
+La versión pública está desplegada en [Railway](https://railway.com): <https://archipielagos-production.up.railway.app/>
 
-1. Crea una cuenta gratuita en <https://render.com> y conecta tu cuenta de GitHub.
-2. En el panel, elige **New > Blueprint**, selecciona este repositorio y pulsa **Apply**.
-3. Espera a que termine el primer build (unos minutos) y abre la URL `https://<nombre>.onrender.com` que muestra Render.
+Railway construye la imagen con el `Dockerfile` de la raíz e inyecta el puerto en la variable `PORT`, que el servidor ya usa. No hace falta ningún archivo de configuración adicional.
 
-Cada push a `main` vuelve a desplegar automáticamente. Para volver atrás, usa **Rollback** en el panel del servicio o revierte el commit.
+Para desplegar una copia propia:
 
-Limitaciones del plan gratuito:
+1. Crea una cuenta en Railway y conecta tu cuenta de GitHub.
+2. Crea un proyecto con **New Project > Deploy from GitHub repo** y elige este repositorio.
+3. Cuando termine el build, en **Settings > Networking** pulsa **Generate Domain** para obtener una URL pública `https://<nombre>.up.railway.app`.
 
-- **Se duerme.** El servicio se duerme tras 15 minutos sin tráfico. La siguiente visita lo despierta, y eso tarda alrededor de un minuto. Abre la URL un poco antes de enseñarlo.
-- **Las partidas viven en memoria.** Un despliegue, un reinicio o que el servicio se duerma con todos desconectados las borra.
-- **Horas limitadas.** Hay 750 horas de instancia al mes, que sobran para un único servicio.
+Cada push a la rama conectada (`main`) vuelve a desplegar. Para volver atrás, despliega un deploy anterior desde el panel del servicio o revierte el commit.
+
+Limitaciones a tener en cuenta:
+
+- **Las partidas viven en memoria.** Un nuevo despliegue o un reinicio del servicio borra las partidas en curso. Conviene no hacer push mientras alguien juega.
+- **Una sola instancia.** Todos los jugadores de una sala tienen que llegar al mismo proceso, así que el servicio no debe escalarse a más de una réplica.

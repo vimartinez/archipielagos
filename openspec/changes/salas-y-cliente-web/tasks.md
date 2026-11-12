@@ -33,7 +33,7 @@
 
 ## 5. Despliegue y documentación
 
-- [x] 5.1 Crear el `Dockerfile` multi-stage (D8) y un `.dockerignore`. Verificar que `docker build` y `docker run -e PORT=8080 -p 8080:8080` sirven el juego en local, si Docker está disponible. Si no lo está, verificarlo en el primer deploy de Render.
-- [ ] 5.2 Crear `render.yaml` (servicio web Docker, plan free, autodeploy desde `main`, health check en `/`) y comprobar las condiciones vigentes del plan gratuito de Render. Verificar que el blueprint se valida en Render.
-- [x] 5.3 Actualizar el README: módulos, ejecución en local, cómo jugar y pasos para desplegar en Render, incluidas las limitaciones del plan gratuito. Verificar siguiendo las instrucciones desde un clon limpio.
-- [ ] 5.4 Prueba final en producción: desplegar en Render, abrir la URL pública en dos navegadores (uno de ellos en otra red, si es posible) y jugar una partida completa con resolución anticipada y por plazo. Verificar que funciona de principio a fin y anotar la URL en el README.
+- [x] 5.1 Crear el `Dockerfile` multi-stage (D8) y un `.dockerignore`. Verificar que `docker build` y `docker run -e PORT=8080 -p 8080:8080` sirven el juego en local, si Docker está disponible. Si no lo está, verificarlo en el primer despliegue.
+- [x] 5.2 Desplegar en Railway desde el repo de GitHub (detecta el `Dockerfile`, despliegue en cada push a `main`) y generar el dominio público. Verificar que la URL pública sirve el juego y que el WebSocket acepta conexiones.
+- [x] 5.3 Actualizar el README: módulos, ejecución en local, cómo jugar y pasos para desplegar en Railway y sus limitaciones. Verificar siguiendo las instrucciones desde un clon limpio.
+- [ ] 5.4 Prueba final en producción: abrir la URL pública en dos navegadores (uno de ellos en otra red, si es posible) y jugar una partida completa con resolución anticipada y por plazo. Verificar que funciona de principio a fin y anotar la URL en el README.
