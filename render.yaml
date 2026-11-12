@@ -1,0 +1,12 @@
+# Blueprint de Render: un único servicio web Docker que sirve el cliente y el WebSocket del juego.
+# Uso: en Render, "New > Blueprint", elegir este repositorio y aplicar.
+services:
+  - type: web
+    name: archipielago
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    branch: main
+    autoDeploy: true
+    healthCheckPath: /

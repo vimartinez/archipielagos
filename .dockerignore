@@ -1,0 +1,14 @@
+# Solo hace falta el código fuente y el wrapper de Maven para construir la imagen.
+**/target
+.git
+.github
+.idea
+.vscode
+.claude
+openspec
+*.md
+*.iml
+.DS_Store
+Dockerfile
+.dockerignore
+render.yaml
